@@ -1,0 +1,18 @@
+name: vsm-agent
+summary: Intel Virtual Storage Manager for Ceph(vsm agent)
+maintainer: Boxiang Zhu <boxiang.zhu@intel.com>
+description: |
+  Virtual Storage Manager (VSM) is a web-based management application for Ceph storage systems. VSM creates, manages, and monitors a Ceph cluster. VSM simplifies the creation and day-to-day management of a Ceph cluster for cloud and data center storage administrators.
+tags:
+  - storage
+requires:
+  shared-db:
+    interface: mysql-shared
+  amqp:
+    interface: rabbitmq
+provides:
+  vsm-agent:
+    interface: vsm-agent
+peers:
+  agent-peer:
+    interface: vsm-controller

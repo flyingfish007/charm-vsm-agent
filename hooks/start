@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+juju-log "********vsm_charm start begin"
+juju-log "********vsm_charm start end"

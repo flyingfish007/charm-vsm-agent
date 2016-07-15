@@ -1,0 +1,92 @@
+options:
+  ceph-source:
+    type: string
+    default: http://ceph.com/debian-hammer main
+    description: |
+      Optional configuration to support use of additional sources such as:
+
+        - ppa:myteam/ppa
+        - cloud:trusty-proposed/kilo
+        - http://my.archive.com/ubuntu main
+
+      The last option should be used in conjunction with the key configuration
+      option.
+
+      Note that a minimum ceph version of 0.48.2 is required for use with this
+      charm which is NOT provided by the packages in the main Ubuntu archive
+      for precise but is provided in the Ubuntu cloud archive.
+  ceph-key:
+    type: string
+    default:
+    description: |
+      Key ID to import to the apt keyring to support use with arbitary source
+      configuration from outside of Launchpad archives or PPA's.
+  rabbit-user:
+    default: vsm
+    type: string
+    description: Username to request access on rabbitmq-server.
+  rabbit-vhost:
+    default: vsm
+    type: string
+    description: RabbitMQ virtual host to request access on rabbitmq-server.
+  database-user:
+    default: vsm
+    type: string
+    description: Username to request database access.
+  database:
+    default: vsm
+    type: string
+    description: Database to request access.
+  enabled-services:
+    default: all
+    type: string
+    description: |
+      If splitting vsm services between units, define which services
+      to install and configure.
+  api-listening-port:
+    default: 8778
+    type: int
+    description: VSM API listening port.
+  region:
+    default: RegionOne
+    type: string
+    description: VSM Region
+  # Network configuration options
+  # by default all access is over 'private-address'
+  os-admin-network:
+    type: string
+    default:
+    description: |
+      The IP address and netmask of the OpenStack Admin network (e.g.,
+      192.168.0.0/24)
+      .
+      This network will be used for admin endpoints.
+  os-internal-network:
+    type: string
+    default:
+    description: |
+      The IP address and netmask of the OpenStack Internal network (e.g.,
+      192.168.0.0/24)
+      .
+      This network will be used for internal endpoints.
+  os-public-network:
+    type: string
+    default:
+    description: |
+      The IP address and netmask of the OpenStack Public network (e.g.,
+      192.168.0.0/24)
+      .
+      This network will be used for public endpoints.
+  os-public-hostname:
+    type: string
+    default:
+    description: |
+      The hostname or address of the public endpoints created for vsm
+      in the keystone identity provider.
+
+      This value will be used for public endpoints. For example, an
+      os-public-hostname set to 'vsm.example.com' with ssl enabled will
+      create two public endpoints for cinder:
+
+      https://vsm.example.com:443/v1/$(tenant_id)s and
+      https://vsm.example.com:443/v2/$(tenant_id)s
