@@ -80,7 +80,7 @@ def install():
 
 
 @hooks.hook('shared-db-relation-joined')
-def db_joined():
+def db_joined(relation_id=None):
     juju_log('**********shared-db-relation-joined')
     try:
         # NOTE: try to use network spaces
@@ -91,7 +91,8 @@ def db_joined():
     conf = config()
     relation_set(database=conf['database'],
                  username=conf['database-user'],
-                 hostname=host)
+                 hostname=host,
+                 relation_id=relation_id)
 
 
 @hooks.hook('shared-db-relation-changed')
@@ -103,7 +104,6 @@ def db_changed():
         return
     juju_log('**********CONFIGS is %s' % str(CONFIGS))
     CONFIGS.write(VSM_CONF)
-    config_vsm_controller()
 
 
 @hooks.hook('amqp-relation-joined')
@@ -123,7 +123,6 @@ def amqp_changed():
         return
     juju_log('**********CONFIGS is %s' % str(CONFIGS))
     CONFIGS.write(VSM_CONF)
-    config_vsm_controller()
 
 
 @hooks.hook('vsm-agent-relation-joined')
@@ -152,48 +151,6 @@ def _auth_config():
         'admin_password': auth_token_config('admin_password')
     }
     return cfg
-
-def config_vsm_controller():
-    if 'shared-db' in CONFIGS.complete_contexts() and \
-        'amqp' in CONFIGS.complete_contexts() and \
-        'identity-service' in CONFIGS.complete_contexts():
-
-        service_host = auth_token_config('identity_uri').split('/')[2].split(':')[0]
-        net = '.'.join(service_host.split('.')[0:3]) + ".0\/24"
-        subprocess.check_call(['sudo', 'sed', '-i', 's/^192.168.*/%s/g' % net,
-                               '/etc/manifest/cluster.manifest'])
-        subprocess.check_call(['sudo', 'service', 'vsm-api', 'restart'])
-        subprocess.check_call(['sudo', 'service', 'vsm-scheduler', 'restart'])
-        subprocess.check_call(['sudo', 'service', 'vsm-conductor', 'restart'])
-
-        # TODO fix the hardcode of vsm-dashboard.
-        subprocess.check_call(['sudo', 'sed', '-i', "s/'service'/'services'/g",
-                               '/usr/share/vsm-dashboard/vsm_dashboard/api/vsm.py'])
-        keystone_vsm_service_password = auth_token_config('admin_password')
-        local_settings = "/usr/share/vsm-dashboard/vsm_dashboard/local/local_settings.py"
-        etc_local_settings = "/etc/vsm-dashboard/local_settings"
-        rsync(
-            charm_dir() + '/files/local_settings.template',
-            local_settings
-        )
-        subprocess.check_call(['sudo', 'sed', '-i',
-                               's/^KEYSTONE_VSM_SERVICE_PASSWORD =*.*/KEYSTONE_VSM_SERVICE_PASSWORD = "%s"/g' % keystone_vsm_service_password,
-                               local_settings])
-        subprocess.check_call(['sudo', 'sed', '-i', 's/^OPENSTACK_HOST =*.*/OPENSTACK_HOST = "%s"/g' % service_host,
-                               local_settings])
-        subprocess.check_call(['sudo', 'sed', '-i', 's/^OPENSTACK_KEYSTONE_DEFAULT_ROLE =*.*/OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"/g',
-                               local_settings])
-        subprocess.check_call(['sudo', 'rm', '-rf', etc_local_settings])
-        subprocess.check_call(['sudo', 'ln', '-sf', local_settings, etc_local_settings])
-
-        rsync(
-            charm_dir() + '/scripts/https',
-            '/tmp/https'
-        )
-        subprocess.check_call(['sudo', 'bash', '/tmp/https'])
-        subprocess.check_call(['sudo', 'service', 'apache2', 'restart'])
-        open_port('443')
-        open_port('80')
 
 
 if __name__ == '__main__':
