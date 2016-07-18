@@ -1,17 +1,15 @@
 #!/usr/bin/python
 
 import sys
-import subprocess
 import utils
 
 from vsm_agent_utils import (
     auth_token_config,
+    import_authorized_keys,
     initialize_ssh_keys,
     juju_log,
-    migrate_database,
     public_ssh_key,
     register_configs,
-    service_enabled,
     PRE_INSTALL_PACKAGES,
     VSM_PACKAGES,
     VSM_CONF
@@ -21,7 +19,6 @@ from charmhelpers.core.hookenv import (
     charm_dir,
     config,
     network_get_primary_address,
-    open_port,
     relation_set,
     unit_get,
     UnregisteredHookError,
@@ -137,6 +134,7 @@ def agent_joined(rid=None):
 @hooks.hook('vsm-agent-relation-changed')
 def agent_changed():
     CONFIGS.write_all()
+    import_authorized_keys()
 
 
 def keystone_agent_settings():

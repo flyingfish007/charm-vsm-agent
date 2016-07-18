@@ -19,7 +19,8 @@ from charmhelpers.core.decorators import (
 
 from charmhelpers.core.hookenv import (
     config,
-    log
+    log,
+    relation_get
 )
 
 
@@ -150,3 +151,54 @@ def initialize_ssh_keys(user='root'):
         with open(pub_key, 'wb') as out:
             out.write(p)
     check_output(['chown', '-R', user, ssh_dir])
+
+def import_authorized_keys(user='root', prefix=None):
+    """Import SSH authorized_keys + known_hosts from a cloud-compute relation.
+    Store known_hosts in user's $HOME/.ssh and authorized_keys in a path
+    specified using authorized-keys-path config option.
+    """
+    known_hosts = []
+    authorized_keys = []
+    if prefix:
+        known_hosts_index = relation_get(
+            '{}_known_hosts_max_index'.format(prefix))
+        if known_hosts_index:
+            for index in range(0, int(known_hosts_index)):
+                known_hosts.append(relation_get(
+                                   '{}_known_hosts_{}'.format(prefix, index)))
+        authorized_keys_index = relation_get(
+            '{}_authorized_keys_max_index'.format(prefix))
+        if authorized_keys_index:
+            for index in range(0, int(authorized_keys_index)):
+                authorized_keys.append(relation_get(
+                    '{}_authorized_keys_{}'.format(prefix, index)))
+    else:
+        # XXX: Should this be managed via templates + contexts?
+        known_hosts_index = relation_get('known_hosts_max_index')
+        if known_hosts_index:
+            for index in range(0, int(known_hosts_index)):
+                known_hosts.append(relation_get(
+                    'known_hosts_{}'.format(index)))
+        authorized_keys_index = relation_get('authorized_keys_max_index')
+        if authorized_keys_index:
+            for index in range(0, int(authorized_keys_index)):
+                authorized_keys.append(relation_get(
+                    'authorized_keys_{}'.format(index)))
+
+    # XXX: Should partial return of known_hosts or authorized_keys
+    #      be allowed ?
+    if not len(known_hosts) or not len(authorized_keys):
+        return
+    homedir = pwd.getpwnam(user).pw_dir
+    dest_auth_keys = config('authorized-keys-path').format(
+        homedir=homedir, username=user)
+    dest_known_hosts = os.path.join(homedir, '.ssh/known_hosts')
+    log('Saving new known_hosts file to %s and authorized_keys file to: %s.' %
+        (dest_known_hosts, dest_auth_keys))
+
+    with open(dest_known_hosts, 'wb') as _hosts:
+        for index in range(0, int(known_hosts_index)):
+            _hosts.write('{}\n'.format(known_hosts[index]))
+    with open(dest_auth_keys, 'wb') as _keys:
+        for index in range(0, int(authorized_keys_index)):
+            _keys.write('{}\n'.format(authorized_keys[index]))
