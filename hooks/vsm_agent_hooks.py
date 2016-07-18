@@ -6,8 +6,10 @@ import utils
 
 from vsm_agent_utils import (
     auth_token_config,
+    initialize_ssh_keys,
     juju_log,
     migrate_database,
+    public_ssh_key,
     register_configs,
     service_enabled,
     PRE_INSTALL_PACKAGES,
@@ -30,18 +32,13 @@ from charmhelpers.core.host import (
     rsync
 )
 
-from charmhelpers.contrib.openstack.ip import (
-    canonical_url,
-    ADMIN,
-    INTERNAL,
-    PUBLIC
-)
-
 from charmhelpers.fetch import (
     add_source,
     apt_install,
     apt_update
 )
+
+from socket import gethostname
 
 hooks = Hooks()
 
@@ -127,14 +124,19 @@ def amqp_changed():
 
 @hooks.hook('vsm-agent-relation-joined')
 def agent_joined(rid=None):
-    rel_settings = {}
-    rel_settings.update(keystone_agent_settings())
-    relation_set(relation_id=rid, **rel_settings)
+    initialize_ssh_keys()
+
+    settings = {
+        'hostname': gethostname()
+    }
+
+    settings['ssh_public_key'] = public_ssh_key()
+    relation_set(relation_id=rid, **settings)
 
 
 @hooks.hook('vsm-agent-relation-changed')
 def agent_changed():
-    return
+    CONFIGS.write_all()
 
 
 def keystone_agent_settings():
