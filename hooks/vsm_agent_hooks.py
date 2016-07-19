@@ -169,6 +169,8 @@ def agent_changed(rid=None, unit=None):
                            '/etc/manifest/server.manifest'])
     subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
                            '/etc/manifest/server.manifest'])
+    subprocess.check_call(['sudo', 'service', 'vsm-agent', 'restart'])
+    subprocess.check_call(['sudo', 'service', 'vsm-physical', 'restart'])
 
 
 if __name__ == '__main__':
