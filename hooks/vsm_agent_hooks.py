@@ -5,20 +5,26 @@ import utils
 
 from vsm_agent_utils import (
     auth_token_config,
-    import_authorized_keys,
     initialize_ssh_keys,
     juju_log,
     public_ssh_key,
     register_configs,
+    ssh_controller_key_add,
     PRE_INSTALL_PACKAGES,
     VSM_PACKAGES,
     VSM_CONF
+)
+
+from charmhelpers.contrib.openstack.utils import (
+    get_host_ip,
+    get_hostname
 )
 
 from charmhelpers.core.hookenv import (
     charm_dir,
     config,
     network_get_primary_address,
+    relation_get,
     relation_set,
     unit_get,
     UnregisteredHookError,
@@ -119,22 +125,31 @@ def amqp_changed():
     CONFIGS.write(VSM_CONF)
 
 
-@hooks.hook('vsm-agent-relation-joined')
-def agent_joined(rid=None):
-    initialize_ssh_keys()
-
-    settings = {
-        'hostname': gethostname()
-    }
-
-    settings['ssh_public_key'] = public_ssh_key()
-    relation_set(relation_id=rid, **settings)
+# @hooks.hook('vsm-agent-relation-joined')
+# def agent_joined(rid=None):
+#     initialize_ssh_keys()
+#
+#     settings = {
+#         'hostname': gethostname()
+#     }
+#
+#     settings['ssh_public_key'] = public_ssh_key()
+#     relation_set(relation_id=rid, **settings)
 
 
 @hooks.hook('vsm-agent-relation-changed')
-def agent_changed():
-    CONFIGS.write_all()
-    import_authorized_keys()
+def agent_changed(rid=None, unit=None):
+    rel_settings = relation_get(rid=rid, unit=unit)
+    key = rel_settings.get('ssh_public_key')
+    if not key:
+        juju_log('peer did not publish key?')
+        return
+    ssh_controller_key_add(key, rid=rid, unit=unit)
+    host = unit_get('private-address')
+    hostname = get_hostname(host)
+    hostaddress = get_host_ip(host)
+    with open('/etc/hosts', 'a') as hosts:
+        hosts.write('%s  %s' % (hostaddress, hostname) + '\n')
 
 
 def keystone_agent_settings():

@@ -1,0 +1,18 @@
+[vsm_controller_ip]
+controller_ip
+
+[role]
+#role can be storage, monitor, mds and rgw
+monitor
+
+[auth_key]
+token-tenant
+
+[ssd]
+#format [ssd_device]  [journal_device]
+
+[7200_rpm_sata]
+#format [sata_device]  [journal_device]
+
+[10krpm_sas]
+#format [sas_device]  [journal_device]

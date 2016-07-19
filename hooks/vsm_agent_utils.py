@@ -202,3 +202,25 @@ def import_authorized_keys(user='root', prefix=None):
     with open(dest_auth_keys, 'wb') as _keys:
         for index in range(0, int(authorized_keys_index)):
             _keys.write('{}\n'.format(authorized_keys[index]))
+
+def ssh_controller_key_add(public_key, rid=None, unit=None, user='root'):
+    private_address = relation_get(rid=rid, unit=unit,
+                                   attribute='private-address')
+    if not ssh_authorized_key_exists(public_key, user):
+        log('Saving SSH authorized key for controller host at %s.' %
+            private_address)
+        add_authorized_key(public_key, user)
+
+def ssh_authorized_key_exists(public_key, user='root'):
+    homedir = pwd.getpwnam(user).pw_dir
+    dest_auth_keys = config('authorized-keys-path').format(
+        homedir=homedir, username=user)
+    with open(dest_auth_keys) as keys:
+        return (' %s ' % public_key) in keys.read()
+
+def add_authorized_key(public_key, user='root'):
+    homedir = pwd.getpwnam(user).pw_dir
+    dest_auth_keys = config('authorized-keys-path').format(
+        homedir=homedir, username=user)
+    with open(dest_auth_keys, 'a') as keys:
+        keys.write(public_key + '\n')
