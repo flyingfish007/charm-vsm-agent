@@ -90,3 +90,16 @@ options:
 
       https://vsm.example.com:443/v1/$(tenant_id)s and
       https://vsm.example.com:443/v2/$(tenant_id)s
+  authorized-keys-path:
+    type: string
+    default: '{homedir}/.ssh/authorized_keys'
+    description: |
+      Only used when migration-auth-type is set to ssh.
+      .
+      Full path to authorized_keys file, can be useful for systems with
+      non-default AuthorizedKeysFile location. It will be formatted using the
+      following variables:
+      .
+        homedir - user's home directory
+        username - username
+      .
