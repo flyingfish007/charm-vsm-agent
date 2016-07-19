@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import subprocess
 import utils
 
 from vsm_agent_utils import (
@@ -125,20 +126,27 @@ def amqp_changed():
     CONFIGS.write(VSM_CONF)
 
 
-# @hooks.hook('vsm-agent-relation-joined')
-# def agent_joined(rid=None):
-#     initialize_ssh_keys()
-#
-#     settings = {
-#         'hostname': gethostname()
-#     }
-#
-#     settings['ssh_public_key'] = public_ssh_key()
-#     relation_set(relation_id=rid, **settings)
+@hooks.hook('vsm-agent-relation-joined')
+def agent_joined(relation_id=None):
+    initialize_ssh_keys()
+    host = unit_get('private-address')
+    settings = {
+        'hostname': get_hostname(host),
+        'hostaddress': get_host_ip(host)
+    }
+
+    relation_set(relation_id=relation_id, **settings)
 
 
 @hooks.hook('vsm-agent-relation-changed')
 def agent_changed(rid=None, unit=None):
+    if 'shared-db' not in CONFIGS.complete_contexts():
+        juju_log('shared-db relation incomplete. Peer not ready?')
+        return
+    if 'amqp' not in CONFIGS.complete_contexts():
+        juju_log('amqp relation incomplete. Peer not ready?')
+        return
+
     rel_settings = relation_get(rid=rid, unit=unit)
     key = rel_settings.get('ssh_public_key')
     if not key:
@@ -151,21 +159,16 @@ def agent_changed(rid=None, unit=None):
     with open('/etc/hosts', 'a') as hosts:
         hosts.write('%s  %s' % (hostaddress, hostname) + '\n')
 
-
-def keystone_agent_settings():
-    ks_auth_config = _auth_config()
-    rel_settings = {}
-    rel_settings.update(ks_auth_config)
-    return rel_settings
-
-def _auth_config():
-    '''Grab all KS auth token config from vsm.conf, or return empty {}'''
-    cfg = {
-        'service_host': auth_token_config('identity_uri').split('/')[2].split(':')[0],
-        'admin_user': auth_token_config('admin_user'),
-        'admin_password': auth_token_config('admin_password')
-    }
-    return cfg
+    token_tenant = rel_settings.get('token_tenant')
+    rsync(
+        charm_dir() + '/files/server.manifest',
+        '/etc/manifest/server.manifest'
+    )
+    c_hostaddress = rel_settings.get('hostaddress')
+    subprocess.check_call(['sudo', 'sed', '-i', 's/controller_ip/%s/g' % c_hostaddress,
+                           '/etc/manifest/server.manifest'])
+    subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
+                           '/etc/manifest/server.manifest'])
 
 
 if __name__ == '__main__':
