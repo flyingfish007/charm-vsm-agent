@@ -5,10 +5,8 @@ import subprocess
 import utils
 
 from vsm_agent_utils import (
-    auth_token_config,
     initialize_ssh_keys,
     juju_log,
-    public_ssh_key,
     register_configs,
     ssh_controller_key_add,
     PRE_INSTALL_PACKAGES,
@@ -41,8 +39,6 @@ from charmhelpers.fetch import (
     apt_install,
     apt_update
 )
-
-from socket import gethostname
 
 hooks = Hooks()
 
