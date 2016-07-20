@@ -161,7 +161,7 @@ def agent_changed(rid=None, unit=None):
         '/etc/manifest/server.manifest'
     )
     c_hostaddress = rel_settings.get('hostaddress')
-    subprocess.check_call(['sudo', 'sed', '-i', 's/controller_ip/%s/g' % c_hostaddress,
+    subprocess.check_call(['sudo', 'sed', '-i', 's/^controller_ip/%s/g' % c_hostaddress,
                            '/etc/manifest/server.manifest'])
     subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
                            '/etc/manifest/server.manifest'])
