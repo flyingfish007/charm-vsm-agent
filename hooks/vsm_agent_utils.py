@@ -105,7 +105,7 @@ def ssh_authorized_key_exists(public_key, user='root'):
     dest_auth_keys = config('authorized-keys-path').format(
         homedir=homedir, username=user)
     with open(dest_auth_keys) as keys:
-        return (' %s ' % public_key) in keys.read()
+        return public_key in keys.read()
 
 
 def add_authorized_key(public_key, user='root'):
