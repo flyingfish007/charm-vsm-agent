@@ -143,30 +143,34 @@ def agent_changed(rid=None, unit=None):
         juju_log('amqp relation incomplete. Peer not ready?')
         return
 
-    rel_settings = relation_get(rid=rid, unit=unit)
-    key = rel_settings.get('ssh_public_key')
-    if not key:
-        juju_log('peer did not publish key?')
-        return
-    ssh_controller_key_add(key, rid=rid, unit=unit)
-    host = unit_get('private-address')
-    hostname = get_hostname(host)
-    hostaddress = get_host_ip(host)
-    with open('/etc/hosts', 'a') as hosts:
-        hosts.write('%s  %s' % (hostaddress, hostname) + '\n')
+    with open('/etc/manifest/server.manifest') as server_manifest:
+        flag = 'token-tenant' in server_manifest.read()
 
-    token_tenant = rel_settings.get('token_tenant')
-    rsync(
-        charm_dir() + '/files/server.manifest',
-        '/etc/manifest/server.manifest'
-    )
-    c_hostaddress = rel_settings.get('hostaddress')
-    subprocess.check_call(['sudo', 'sed', '-i', 's/^controller_ip/%s/g' % c_hostaddress,
-                           '/etc/manifest/server.manifest'])
-    subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
-                           '/etc/manifest/server.manifest'])
-    subprocess.check_call(['sudo', 'service', 'vsm-agent', 'restart'])
-    subprocess.check_call(['sudo', 'service', 'vsm-physical', 'restart'])
+    if flag:
+        rel_settings = relation_get(rid=rid, unit=unit)
+        key = rel_settings.get('ssh_public_key')
+        if not key:
+            juju_log('peer did not publish key?')
+            return
+        ssh_controller_key_add(key, rid=rid, unit=unit)
+        host = unit_get('private-address')
+        hostname = get_hostname(host)
+        hostaddress = get_host_ip(host)
+        with open('/etc/hosts', 'a') as hosts:
+            hosts.write('%s  %s' % (hostaddress, hostname) + '\n')
+
+        token_tenant = rel_settings.get('token_tenant')
+        rsync(
+            charm_dir() + '/files/server.manifest',
+            '/etc/manifest/server.manifest'
+        )
+        c_hostaddress = rel_settings.get('hostaddress')
+        subprocess.check_call(['sudo', 'sed', '-i', 's/^controller_ip/%s/g' % c_hostaddress,
+                               '/etc/manifest/server.manifest'])
+        subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
+                               '/etc/manifest/server.manifest'])
+        subprocess.check_call(['sudo', 'service', 'vsm-agent', 'start'])
+        subprocess.check_call(['sudo', 'service', 'vsm-physical', 'start'])
 
 
 if __name__ == '__main__':
