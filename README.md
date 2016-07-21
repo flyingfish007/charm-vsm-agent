@@ -30,11 +30,13 @@ $ juju deploy --repository=$HOME/charms local:trusty/vsm-agent
 * you can use command 'juju debug-log' to see whether the deployment has been done.
 * after you do as above, you can see that.  
 ![pic1](pic/vsm-agent1.jpg)
+* add relation between vsm-agent and mysql and vsm-agent and rabbitmq-server.  
+![pic6](pic/vsm-agent6.jpg)
+* add relation between vsm-agent and vsm-controller.  
+![pic7](pic/vsm-agent7.jpg)
 * add new machine.  
 ![pic2](pic/vsm-agent2.jpg)
 * scale the vsm-agent by 2.  
 ![pic3](pic/vsm-agent3.jpg)
-* add relation between vsm-agent and mysql and vsm-agent and rabbitmq-server.  
-![pic4](pic/vsm-agent4.jpg)
-* add relation between vsm-agent and vsm-controller.  
+* finally you will see as followed.  
 ![pic5](pic/vsm-agent5.jpg)
