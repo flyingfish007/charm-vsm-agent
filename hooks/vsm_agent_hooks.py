@@ -149,6 +149,7 @@ def agent_changed(rid=None, unit=None):
     if flag:
         rel_settings = relation_get(rid=rid, unit=unit)
         key = rel_settings.get('ssh_public_key')
+        juju_log("**********key is %s" % str(key))
         if not key:
             juju_log('peer did not publish key?')
             return
@@ -156,21 +157,30 @@ def agent_changed(rid=None, unit=None):
         host = unit_get('private-address')
         hostname = get_hostname(host)
         hostaddress = get_host_ip(host)
+        juju_log("**********host is %s" % host)
+        juju_log("**********hostname is %s" % hostname)
+        juju_log("**********hostaddress is %s" % hostaddress)
         with open('/etc/hosts', 'a') as hosts:
             hosts.write('%s  %s' % (hostaddress, hostname) + '\n')
 
         token_tenant = rel_settings.get('token_tenant')
+        juju_log("**********token_tenant is %s" % token_tenant)
         rsync(
             charm_dir() + '/files/server.manifest',
             '/etc/manifest/server.manifest'
         )
         c_hostaddress = rel_settings.get('hostaddress')
+        juju_log("**********controller_hostaddress is %s" % c_hostaddress)
         subprocess.check_call(['sudo', 'sed', '-i', 's/^controller_ip/%s/g' % c_hostaddress,
                                '/etc/manifest/server.manifest'])
         subprocess.check_call(['sudo', 'sed', '-i', 's/token-tenant/%s/g' % token_tenant,
                                '/etc/manifest/server.manifest'])
+        subprocess.check_call(['sudo', 'service', 'vsm-agent', 'stop'])
         subprocess.check_call(['sudo', 'service', 'vsm-agent', 'start'])
+        subprocess.check_call(['sudo', 'service', 'vsm-physical', 'stop'])
         subprocess.check_call(['sudo', 'service', 'vsm-physical', 'start'])
+        juju_log("**********start vsm-agent")
+        juju_log("**********start vsm-physical")
 
 
 if __name__ == '__main__':
