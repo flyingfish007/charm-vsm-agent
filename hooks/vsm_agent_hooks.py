@@ -121,6 +121,12 @@ def amqp_changed():
     juju_log('**********CONFIGS is %s' % str(CONFIGS))
     CONFIGS.write(VSM_CONF)
 
+    with open('/etc/manifest/server.manifest') as server_manifest:
+        flag = 'token-tenant' in server_manifest.read()
+    if not flag:
+        subprocess.check_call(['sudo', 'service', 'vsm-agent', 'restart'])
+        juju_log("**********restart vsm-agent")
+
 
 @hooks.hook('vsm-agent-relation-joined')
 def agent_joined(relation_id=None):
@@ -145,13 +151,6 @@ def agent_changed(rid=None, unit=None):
 
     with open('/etc/manifest/server.manifest') as server_manifest:
         flag = 'token-tenant' in server_manifest.read()
-
-    with open('/etc/vsm/vsm.conf') as vsm_conf:
-        flag0 = 'database_user' not in vsm_conf.read()
-
-    if not flag0:
-        juju_log("return")
-        return
 
     if flag:
         rel_settings = relation_get(rid=rid, unit=unit)
