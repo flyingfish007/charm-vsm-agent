@@ -146,7 +146,10 @@ def agent_changed(rid=None, unit=None):
     with open('/etc/manifest/server.manifest') as server_manifest:
         flag = 'token-tenant' in server_manifest.read()
 
-    if flag:
+    with open('/etc/vsm/vsm.conf') as vsm_conf:
+        flag0 = 'database_user' not in vsm_conf.read()
+
+    if flag and flag0:
         rel_settings = relation_get(rid=rid, unit=unit)
         key = rel_settings.get('ssh_public_key')
         juju_log("**********key is %s" % str(key))
