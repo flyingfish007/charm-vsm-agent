@@ -149,7 +149,11 @@ def agent_changed(rid=None, unit=None):
     with open('/etc/vsm/vsm.conf') as vsm_conf:
         flag0 = 'database_user' not in vsm_conf.read()
 
-    if flag and flag0:
+    if not flag0:
+        juju_log("return")
+        return
+
+    if flag:
         rel_settings = relation_get(rid=rid, unit=unit)
         key = rel_settings.get('ssh_public_key')
         juju_log("**********key is %s" % str(key))
