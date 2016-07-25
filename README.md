@@ -3,6 +3,10 @@ Charm of juju for Virtual-Storage-Manager(VSM) Agent.
 - VSM consists of vsm-controller and vsm-agent nodes.
 - The charm aims to deploy the vsm-agent with vsm-agent and vsm-physical.
 
+## Notice
+* Don't support to change the config now.
+* Don't support to add the data and journal devices for osds. Please add it from the vsm platform UI.
+
 ### Prepare
 * OS: ubuntu 14.04.3
 * Juju: 1.25.5-trusty-amd64
