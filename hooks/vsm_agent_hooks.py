@@ -105,8 +105,8 @@ def db_changed():
     with open('/etc/manifest/server.manifest') as server_manifest:
         flag = 'token-tenant' in server_manifest.read()
     if not flag:
-        subprocess.check_call(['sudo', 'service', 'vsm-agent', 'restart'])
-        juju_log("**********restart vsm-agent")
+        subprocess.check_call(['sudo', 'service', 'vsm-agent', 'start'])
+        juju_log("**********start vsm-agent")
 
 
 @hooks.hook('amqp-relation-joined')
